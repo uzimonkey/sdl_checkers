@@ -1,8 +1,11 @@
 CC = gcc
-CFLAGS = -Wall -std=c11 -pedantic
-SRC = checkers.c
+CFLAGS = -Wall -std=c11 -pedantic `pkg-config --cflags sdl2`
+LDFLAGS = `pkg-config --libs sdl2`
 
-test: test.c tests.h $(SRC)
+sdl_checkers: checkers.c checkers.h main.c
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+test: test.c tests.h checkers.c checkers.h
 	$(CC) $(CFLAGS) -Imunit test.c munit/munit.c -o test
 
 tests.h: test.c
