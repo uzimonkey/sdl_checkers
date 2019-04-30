@@ -83,3 +83,18 @@ void init_board() {
   place_ranks(5, 'b');
 }
 
+
+// Returns true if the move from x1,y1 to x2,y2 is valid for player p
+// p is a char representing the normal piece representation for that player,
+// 'b' or 'w'
+bool is_move_valid(int x1, int y1, int x2, int y2, char p) {
+  // Both must be valid and live locations
+  if(!is_location_valid(x1, y1) || !is_location_valid(x2,y2) ||
+      !is_location_live(x1, y1) || !is_location_live(x2,y2))
+    return false;
+
+  return true;
+}
+
+
+

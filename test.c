@@ -135,7 +135,6 @@ test(clear_board_clear_no_pieces) {
     for(int x = 0; x < BOARD_WIDTH; x++)
       pieces += get_piece(x,y) != ' ';
   munit_assert_int(pieces,==,0);
-
   return MUNIT_OK;
 }
 
@@ -146,7 +145,6 @@ test(init_board_24_pieces) {
     for(int x = 0; x < BOARD_WIDTH; x++)
       pieces += get_piece(x,y) != ' ';
   munit_assert_int(pieces,==,24);
-
   return MUNIT_OK;
 }
 
@@ -157,7 +155,6 @@ test(init_board_middle_clear) {
     for(int x = 0; x < BOARD_WIDTH; x++)
       pieces += get_piece(x,y) != ' ';
   munit_assert_int(pieces,==,0);
-
   return MUNIT_OK;
 }
 
@@ -170,7 +167,6 @@ test(init_board_white_top) {
       munit_assert_char(piece,==,'w');
     }
   }
-
   return MUNIT_OK;
 }
 
@@ -183,7 +179,6 @@ test(init_board_black_bottom) {
       munit_assert_char(piece,==,'b');
     }
   }
-
   return MUNIT_OK;
 }
 
@@ -197,7 +192,24 @@ test(init_board_only_on_live) {
       munit_assert_char(piece,==,' ');
     }
   }
+  return MUNIT_OK;
+}
 
+
+//
+// Move validation
+//
+test(is_move_valid_off_board) {
+  clear_board();
+  munit_assert_false(is_move_valid(-1,0,0,0));
+  munit_assert_false(is_move_valid(0,0,-1,0));
+  return MUNIT_OK;
+}
+
+test(is_move_valid_dead_square) {
+  clear_board();
+  munit_assert_false(is_move_valid(0,0,1,0));
+  munit_assert_false(is_move_valid(1,0,0,0));
   return MUNIT_OK;
 }
 
