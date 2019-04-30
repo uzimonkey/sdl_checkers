@@ -127,6 +127,7 @@ const char *is_move_valid(int x1, int y1, int x2, int y2, char p) {
   int piece = get_piece(x1, y1);
   bool is_king = isupper(piece);
   piece = tolower(piece);
+  int distance = abs(x2-x1);
 
   // It must be a known piece
   if(piece != 'w' && piece != 'b') {
@@ -146,6 +147,12 @@ const char *is_move_valid(int x1, int y1, int x2, int y2, char p) {
   else
     ydir = -1;
 
+  // There must be no piece at location 2
+  if(get_piece(x2, y2) != ' ') {
+    snprintf(str, BUF, "Destination %d,%d is not empty", x2, y2);
+    return str;
+  }
+
   // It must move in the correct direction
   if(!is_king && sign(y2-y1) != ydir) {
     snprintf(str, BUF, "Move is wrong direction");
@@ -158,9 +165,21 @@ const char *is_move_valid(int x1, int y1, int x2, int y2, char p) {
     return str;
   }
 
+  // Jump piece
+  if(distance == 2) {
+    int jumped_piece = get_piece(x1+sign(x2-x1), y1+sign(y2-y1));
+    if(jumped_piece == ' ') {
+      snprintf(str, BUF, "Must jump piece to move 2 squares");
+      return str;
+    }
+
+    jumped_piece = tolower(jumped_piece);
+    if(jumped_piece == p) {
+      snprintf(str, BUF, "Cannot jump your own piece");
+      return str;
+    }
+  }
+
   str[0] = 0;
   return NULL;
 }
-
-
-

@@ -3,21 +3,8 @@
 #include "munit.h"
 #include "checkers.c"
 
-#define munit_assert_string_contains(a, b) \
-  do { \
-    const char* munit_tmp_a_ = a; \
-    const char* munit_tmp_b_ = b; \
-    if (MUNIT_UNLIKELY(strstr(munit_tmp_a_, munit_tmp_b_) == 0)) { \
-      munit_errorf("assertion failed: strstr(%s,%s) strstr(\"%s\",\"%s\")", \
-                   #a, #b, munit_tmp_a_, munit_tmp_b_); \
-    } \
-    MUNIT__PUSH_DISABLE_MSVC_C4127 \
-  } while (0) \
-  MUNIT__POP_DISABLE_MSVC_C4127
-
 #define test(name) \
   MunitResult test_##name(const MunitParameter p[], void *data)
-
 
 //
 // Valid location and live squares
@@ -241,7 +228,17 @@ test(is_move_valid_same_color) {
   return MUNIT_OK;
 }
 
-test(is_move_known_piece) {
+test(is_move_valid_destination_empty) {
+  clear_board();
+  set_piece(1,0,'w');
+  set_piece(0,1,'1');
+  munit_assert_string_contains(
+      is_move_valid(1,0,0,1,'w'),
+      "not empty");
+  return MUNIT_OK;
+}
+
+test(is_move_valid_known_piece) {
   clear_board();
   set_piece(1,0,'q');
   munit_assert_string_contains(
@@ -250,14 +247,14 @@ test(is_move_known_piece) {
   return MUNIT_OK;
 }
 
-test(is_move_correct_direction) {
+test(is_move_valid_correct_direction) {
   clear_board();
   set_piece(1,0,'w');
   munit_assert_null(is_move_valid(1,0,0,1,'w'));
   return MUNIT_OK;
 }
 
-test(is_move_incorrect_direction) {
+test(is_move_valid_incorrect_direction) {
   clear_board();
   set_piece(1,0,'b');
   munit_assert_string_contains(
@@ -266,14 +263,14 @@ test(is_move_incorrect_direction) {
   return MUNIT_OK;
 }
 
-test(is_move_king_direction) {
+test(is_move_valid_king_direction) {
   clear_board();
   set_piece(1,0,'B');
   munit_assert_null(is_move_valid(1,0,0,1,'b'));
   return MUNIT_OK;
 }
 
-test(is_move_diagonal) {
+test(is_move_valid_diagonal) {
   clear_board();
   set_piece(1,0,'w');
   munit_assert_string_contains(
@@ -282,9 +279,32 @@ test(is_move_diagonal) {
   return MUNIT_OK;
 }
 
+test(is_move_valid_must_jump) {
+  clear_board();
+  set_piece(1,0,'w');
+  munit_assert_string_contains(
+      is_move_valid(1,0,3,2,'w'),
+      "jump piece to move");
+  return MUNIT_OK;
+}
 
+test(is_move_valid_can_jump) {
+  clear_board();
+  set_piece(1,0,'w');
+  set_piece(2,1,'b');
+  munit_assert_null(is_move_valid(1,0,3,2,'w'));
+  return MUNIT_OK;
+}
 
-
+test(is_move_valid_cant_jump_own) {
+  clear_board();
+  set_piece(1,0,'w');
+  set_piece(2,1,'w');
+  munit_assert_string_contains(
+      is_move_valid(1,0,3,2,'w'),
+      "own piece");
+  return MUNIT_OK;
+}
 
 
 #undef test
