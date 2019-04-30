@@ -18,22 +18,22 @@ test(set_piece) {
 }
 
 test(set_piece_negative_x) {
-  munit_assert(set_piece(-1,1,'!') == -1);
+  munit_assert_false(set_piece(-1,1,'!'));
   return MUNIT_OK;
 }
 
 test(set_piece_x_off_board) {
-  munit_assert(set_piece(BOARD_WIDTH,1,'!') == -1);
+  munit_assert_false(set_piece(BOARD_WIDTH,1,'!'));
   return MUNIT_OK;
 }
 
 test(set_piece_negative_y) {
-  munit_assert(set_piece(1,-1,'!') == -1);
+  munit_assert_false(set_piece(1,-1,'!'));
   return MUNIT_OK;
 }
 
 test(set_piece_y_off_board) {
-  munit_assert(set_piece(0,BOARD_HEIGHT,'!') == -1);
+  munit_assert_false(set_piece(0,BOARD_HEIGHT,'!'));
   return MUNIT_OK;
 }
 
@@ -91,13 +91,13 @@ test(move_piece_removes_piece) {
 test(move_piece_dest_not_empty) {
   clear_board();
   board[3][3] = board[1][1] = '!';
-  munit_assert(move_piece(3,3, 1,1) == -1);
+  munit_assert_false(move_piece(3,3, 1,1));
   return MUNIT_OK;
 }
 
 test(move_piece_src_empty) {
   clear_board();
-  munit_assert(move_piece(3,3, 1,1) == -1);
+  munit_assert_false(move_piece(3,3, 1,1));
   return MUNIT_OK;
 }
 
