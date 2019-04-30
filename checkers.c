@@ -1,6 +1,7 @@
 #include "checkers.h"
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int sign(int x) {
   return (x > 0) - (x < 0);
@@ -90,28 +91,54 @@ void init_board() {
 }
 
 
-// Returns true if the move from x1,y1 to x2,y2 is valid for player p
+// Returns NULL if the move from x1,y1 to x2,y2 is valid for player p
 // p is a char representing the normal piece representation for that player,
 // 'b' or 'w'
-bool is_move_valid(int x1, int y1, int x2, int y2, char p) {
-  // Both must be valid and live locations
-  if(!is_location_valid(x1, y1) || !is_location_valid(x2,y2) ||
-      !is_location_live(x1, y1) || !is_location_live(x2,y2))
-    return false;
+// If invalid, returns const char * string to reason why it's invalid
+// This pointer is to an internal buffer that is overwritten on the
+// next call to is_move_valid.
 
-  // There must be a piece of the same color at location 1
+#define BUF 256
+const char *is_move_valid(int x1, int y1, int x2, int y2, char p) {
+  static char str[BUF] = {0};
+
+  // Both must be valid locations
+  if(!is_location_valid(x1, y1)) {
+    snprintf(str, BUF, "%d,%d is an invalid location", x1, y1);
+    return str;
+  }
+
+  if(!is_location_valid(x2, y2)) {
+    snprintf(str, BUF, "%d,%d is an invalid location", x2, y2);
+    return str;
+  }
+
+  // Both must be live locations
+  if(!is_location_live(x1, y1)) {
+    snprintf(str, BUF, "%d,%d is not a dark square", x1, y1);
+    return str;
+  }
+
+  if(!is_location_live(x2, y2)) {
+    snprintf(str, BUF, "%d,%d is not a dark square", x2, y2);
+    return str;
+  }
+
   int piece = get_piece(x1, y1);
-  if(piece == -1)
-    return false;
-  if(tolower(piece) != p)
-    return false;
-
   bool is_king = isupper(piece);
   piece = tolower(piece);
 
   // It must be a known piece
-  if(piece != 'w' && piece != 'b')
-    return false;
+  if(piece != 'w' && piece != 'b') {
+    snprintf(str, BUF, "Piece at %d,%d is an unknown type (%c)", x1, y1, piece);
+    return str;
+  }
+
+  // There must be a piece of the same color at location 1
+  if(tolower(piece) != p) {
+    snprintf(str, BUF, "Piece at %d,%d is the wrong color (%c)", x1, y1, piece);
+    return str;
+  }
 
   int ydir;
   if(piece == 'w')
@@ -120,14 +147,19 @@ bool is_move_valid(int x1, int y1, int x2, int y2, char p) {
     ydir = -1;
 
   // It must move in the correct direction
-  if(!is_king && sign(y2-y1) != ydir)
-    return false;
+  if(!is_king && sign(y2-y1) != ydir) {
+    snprintf(str, BUF, "Move is wrong direction");
+    return str;
+  }
 
   // Move must be diagonal
-  if(abs(x2-x1) != abs(y2-y1))
-    return false;
+  if(abs(x2-x1) != abs(y2-y1)) {
+    snprintf(str, BUF, "Move must be diagonal");
+    return str;
+  }
 
-  return true;
+  str[0] = 0;
+  return NULL;
 }
 
 

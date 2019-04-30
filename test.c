@@ -3,6 +3,18 @@
 #include "munit.h"
 #include "checkers.c"
 
+#define munit_assert_string_contains(a, b) \
+  do { \
+    const char* munit_tmp_a_ = a; \
+    const char* munit_tmp_b_ = b; \
+    if (MUNIT_UNLIKELY(strstr(munit_tmp_a_, munit_tmp_b_) == 0)) { \
+      munit_errorf("assertion failed: strstr(%s,%s) strstr(\"%s\",\"%s\")", \
+                   #a, #b, munit_tmp_a_, munit_tmp_b_); \
+    } \
+    MUNIT__PUSH_DISABLE_MSVC_C4127 \
+  } while (0) \
+  MUNIT__POP_DISABLE_MSVC_C4127
+
 #define test(name) \
   MunitResult test_##name(const MunitParameter p[], void *data)
 
@@ -201,58 +213,72 @@ test(init_board_only_on_live) {
 //
 test(is_move_valid_off_board) {
   clear_board();
-  munit_assert_false(is_move_valid(-1,0,0,1,'w'));
-  munit_assert_false(is_move_valid(0,1,-1,2,'w'));
+  munit_assert_string_contains(
+      is_move_valid(-1,0,0,1,'w'),
+      "invalid location");
+  munit_assert_string_contains(
+      is_move_valid(0,1,-1,2,'w'),
+      "invalid location");
   return MUNIT_OK;
 }
 
-test(is_move_valid_dead_square) {
-  clear_board();
-  set_piece(0,0,'w');
-  munit_assert_false(is_move_valid(0,0,1,1,'w'));
-  return MUNIT_OK;
-}
-
+ test(is_move_valid_dead_square) {
+   clear_board();
+   set_piece(0,0,'w');
+   munit_assert_string_contains(
+       is_move_valid(0,0,1,1,'w'),
+       "not a dark square");
+   return MUNIT_OK;
+ }
+ 
 test(is_move_valid_same_color) {
   clear_board();
   set_piece(1,0,'w');
-  munit_assert_false(is_move_valid(1,0,0,1,'b'));
-  munit_assert_true(is_move_valid(1,0,0,1,'w'));
+  munit_assert_string_contains(
+      is_move_valid(1,0,0,1,'b'),
+      "wrong color");
+  munit_assert_null(is_move_valid(1,0,0,1,'w'));
   return MUNIT_OK;
 }
 
 test(is_move_known_piece) {
   clear_board();
   set_piece(1,0,'q');
-  munit_assert_false(is_move_valid(1,0,0,1,'b'));
+  munit_assert_string_contains(
+      is_move_valid(1,0,0,1,'b'),
+      "unknown type");
   return MUNIT_OK;
 }
 
 test(is_move_correct_direction) {
   clear_board();
   set_piece(1,0,'w');
-  munit_assert_true(is_move_valid(1,0,0,1,'w'));
+  munit_assert_null(is_move_valid(1,0,0,1,'w'));
   return MUNIT_OK;
 }
 
 test(is_move_incorrect_direction) {
   clear_board();
   set_piece(1,0,'b');
-  munit_assert_false(is_move_valid(1,0,0,1,'b'));
+  munit_assert_string_contains(
+      is_move_valid(1,0,0,1,'b'),
+      "wrong direction");
   return MUNIT_OK;
 }
 
 test(is_move_king_direction) {
   clear_board();
   set_piece(1,0,'B');
-  munit_assert_true(is_move_valid(1,0,0,1,'b'));
+  munit_assert_null(is_move_valid(1,0,0,1,'b'));
   return MUNIT_OK;
 }
 
 test(is_move_diagonal) {
   clear_board();
   set_piece(1,0,'w');
-  munit_assert_false(is_move_valid(1,0,3,0,'w'));
+  munit_assert_string_contains(
+      is_move_valid(1,0,6,1,'w'),
+      "must be diagonal");
   return MUNIT_OK;
 }
 

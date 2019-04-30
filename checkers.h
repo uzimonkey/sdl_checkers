@@ -7,7 +7,7 @@
 
 bool is_location_valid(int x, int y);
 bool is_location_live(int x, int y);
-bool is_move_valid(int x1, int y1, int x2, int y2, char p);
+const char *is_move_valid(int x1, int y1, int x2, int y2, char p);
 
 int get_piece(int x, int y);
 bool set_piece(int x, int y, char piece);
