@@ -13,4 +13,4 @@ tests.h: test.c
 
 .phony: clean
 clean:
-	rm -f a.out test tests.h
+	rm -f a.out test sdl_checkers tests.h
