@@ -201,17 +201,64 @@ test(init_board_only_on_live) {
 //
 test(is_move_valid_off_board) {
   clear_board();
-  munit_assert_false(is_move_valid(-1,0,0,0));
-  munit_assert_false(is_move_valid(0,0,-1,0));
+  munit_assert_false(is_move_valid(-1,0,0,1,'w'));
+  munit_assert_false(is_move_valid(0,1,-1,2,'w'));
   return MUNIT_OK;
 }
 
 test(is_move_valid_dead_square) {
   clear_board();
-  munit_assert_false(is_move_valid(0,0,1,0));
-  munit_assert_false(is_move_valid(1,0,0,0));
+  set_piece(0,0,'w');
+  munit_assert_false(is_move_valid(0,0,1,1,'w'));
   return MUNIT_OK;
 }
+
+test(is_move_valid_same_color) {
+  clear_board();
+  set_piece(1,0,'w');
+  munit_assert_false(is_move_valid(1,0,0,1,'b'));
+  munit_assert_true(is_move_valid(1,0,0,1,'w'));
+  return MUNIT_OK;
+}
+
+test(is_move_known_piece) {
+  clear_board();
+  set_piece(1,0,'q');
+  munit_assert_false(is_move_valid(1,0,0,1,'b'));
+  return MUNIT_OK;
+}
+
+test(is_move_correct_direction) {
+  clear_board();
+  set_piece(1,0,'w');
+  munit_assert_true(is_move_valid(1,0,0,1,'w'));
+  return MUNIT_OK;
+}
+
+test(is_move_incorrect_direction) {
+  clear_board();
+  set_piece(1,0,'b');
+  munit_assert_false(is_move_valid(1,0,0,1,'b'));
+  return MUNIT_OK;
+}
+
+test(is_move_king_direction) {
+  clear_board();
+  set_piece(1,0,'B');
+  munit_assert_true(is_move_valid(1,0,0,1,'b'));
+  return MUNIT_OK;
+}
+
+test(is_move_diagonal) {
+  clear_board();
+  set_piece(1,0,'w');
+  munit_assert_false(is_move_valid(1,0,3,0,'w'));
+  return MUNIT_OK;
+}
+
+
+
+
 
 
 #undef test

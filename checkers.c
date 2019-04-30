@@ -1,4 +1,10 @@
 #include "checkers.h"
+#include <ctype.h>
+#include <stdlib.h>
+
+int sign(int x) {
+  return (x > 0) - (x < 0);
+}
 
 // Empty spaces are ' ', occupied spaces are w,W,b,B
 static char board[BOARD_WIDTH][BOARD_HEIGHT];
@@ -91,6 +97,34 @@ bool is_move_valid(int x1, int y1, int x2, int y2, char p) {
   // Both must be valid and live locations
   if(!is_location_valid(x1, y1) || !is_location_valid(x2,y2) ||
       !is_location_live(x1, y1) || !is_location_live(x2,y2))
+    return false;
+
+  // There must be a piece of the same color at location 1
+  int piece = get_piece(x1, y1);
+  if(piece == -1)
+    return false;
+  if(tolower(piece) != p)
+    return false;
+
+  bool is_king = isupper(piece);
+  piece = tolower(piece);
+
+  // It must be a known piece
+  if(piece != 'w' && piece != 'b')
+    return false;
+
+  int ydir;
+  if(piece == 'w')
+    ydir = 1;
+  else
+    ydir = -1;
+
+  // It must move in the correct direction
+  if(!is_king && sign(y2-y1) != ydir)
+    return false;
+
+  // Move must be diagonal
+  if(abs(x2-x1) != abs(y2-y1))
     return false;
 
   return true;
