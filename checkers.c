@@ -9,6 +9,13 @@ bool is_location_valid(int x, int y) {
   return x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT;
 }
 
+
+// Return true if the location is live (dark squares where pieces may move)
+bool is_location_live(int x, int y) {
+  return is_location_valid(x,y) && ((x%2) != (y%2));
+}
+
+
 // Get piece at board location x, y
 // Returns -1 on error
 int get_piece(int x, int y) {

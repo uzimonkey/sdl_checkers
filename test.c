@@ -8,6 +8,29 @@
 
 
 //
+// Valid location and live squares
+//
+test(is_location_valid) {
+  munit_assert_true(is_location_valid(0, 0));
+  munit_assert_true(is_location_valid(BOARD_WIDTH-1, BOARD_HEIGHT-1));
+  munit_assert_false(is_location_valid(-1, 0));
+  munit_assert_false(is_location_valid(0, -1));
+  munit_assert_false(is_location_valid(BOARD_WIDTH+1, 0));
+  munit_assert_false(is_location_valid(0, BOARD_HEIGHT+1));
+  return MUNIT_OK;
+}
+
+test(is_location_live) {
+  munit_assert_true(is_location_live(1,0));
+  munit_assert_false(is_location_live(0,0));
+  munit_assert_true(is_location_live(0,1));
+  munit_assert_false(is_location_live(BOARD_WIDTH-1,BOARD_HEIGHT-1));
+  munit_assert_false(is_location_live(-1,0));
+  munit_assert_false(is_location_live(0,-1));
+  return MUNIT_OK;
+}
+
+//
 // Set piece
 //
 test(set_piece) {
