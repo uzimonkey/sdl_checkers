@@ -125,6 +125,83 @@ test(move_piece_src_empty) {
 }
 
 
+//
+// Init board
+//
+test(clear_board_clear_no_pieces) {
+  clear_board();
+  int pieces = 0;
+  for(int y = 0; y < BOARD_HEIGHT; y++)
+    for(int x = 0; x < BOARD_WIDTH; x++)
+      pieces += get_piece(x,y) != ' ';
+  munit_assert_int(pieces,==,0);
+
+  return MUNIT_OK;
+}
+
+test(init_board_24_pieces) {
+  init_board();
+  int pieces = 0;
+  for(int y = 0; y < BOARD_HEIGHT; y++)
+    for(int x = 0; x < BOARD_WIDTH; x++)
+      pieces += get_piece(x,y) != ' ';
+  munit_assert_int(pieces,==,24);
+
+  return MUNIT_OK;
+}
+
+test(init_board_middle_clear) {
+  init_board();
+  int pieces = 0;
+  for(int y = 3; y <= 4; y++)
+    for(int x = 0; x < BOARD_WIDTH; x++)
+      pieces += get_piece(x,y) != ' ';
+  munit_assert_int(pieces,==,0);
+
+  return MUNIT_OK;
+}
+
+test(init_board_white_top) {
+  init_board();
+  for(int y = 0; y <= 3; y++) {
+    for(int x = 0; x < BOARD_WIDTH; x++) {
+      int piece = get_piece(x,y);
+      if(piece == ' ') continue;
+      munit_assert_char(piece,==,'w');
+    }
+  }
+
+  return MUNIT_OK;
+}
+
+test(init_board_black_bottom) {
+  init_board();
+  for(int y = 5; y <= 7; y++) {
+    for(int x = 0; x < BOARD_WIDTH; x++) {
+      int piece = get_piece(x,y);
+      if(piece == ' ') continue;
+      munit_assert_char(piece,==,'b');
+    }
+  }
+
+  return MUNIT_OK;
+}
+
+test(init_board_only_on_live) {
+  init_board();
+
+  for(int y = 0; y < BOARD_HEIGHT; y++) {
+    for(int x = 0; x < BOARD_WIDTH; x++) {
+      if(is_location_live(x, y)) continue;
+      int piece = get_piece(x, y);
+      munit_assert_char(piece,==,' ');
+    }
+  }
+
+  return MUNIT_OK;
+}
+
+
 #undef test
 #define test(t) {#t, test_##t},
 #define TESTS_BEGIN
