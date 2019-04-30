@@ -13,9 +13,14 @@
 SDL_Window *window;
 SDL_Renderer *renderer;
 
-SDL_Texture *tex_board;
-SDL_Texture *tex_white, *tex_white_king;
-SDL_Texture *tex_black, *tex_black_king;
+typedef struct {
+  SDL_Texture *tex;
+  int w, h;
+} Texture;
+
+Texture tex_board;
+Texture tex_white, tex_white_king;
+Texture tex_black, tex_black_king;
 
 void init_sdl() {
   if(SDL_Init(SDL_INIT_EVERYTHING))
@@ -31,7 +36,7 @@ void init_sdl() {
   }
 }
 
-void load_texture(const char* filename, SDL_Texture **tex) {
+void load_texture(const char* filename, Texture *tex) {
   cp_image_t img = cp_load_png(filename);
   if(img.pix == 0)
     die(cp_error_reason);
@@ -58,9 +63,11 @@ void load_texture(const char* filename, SDL_Texture **tex) {
   if(surf == NULL)
     die(SDL_GetError());
 
-  *tex = SDL_CreateTextureFromSurface(renderer, surf);
-  if(*tex == NULL)
+  tex->tex = SDL_CreateTextureFromSurface(renderer, surf);
+  if(tex->tex == NULL)
     die(SDL_GetError());
+  tex->w = surf->w;
+  tex->h = surf->h;
 
   SDL_FreeSurface(surf);
   free(img.pix);
@@ -85,9 +92,9 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderCopy(
         renderer,
-        tex_board,
+        tex_board.tex,
         NULL,
-        &(SDL_Rect){.x=0, .y=0, .w=320, .h=320}
+        &(SDL_Rect){.x=0, .y=0, .w=tex_board.w, .h=tex_board.h}
     );
     SDL_RenderPresent(renderer);
   }
