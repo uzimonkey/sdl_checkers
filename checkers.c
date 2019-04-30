@@ -44,20 +44,39 @@ bool set_piece(int x, int y, char piece) {
 }
 
 
-// Move a piece from x1,y1 to x2,y2
-// Returns false on error
-bool move_piece(int x1, int y1, int x2, int y2) {
+// Move a piece from x1,y1 to x2,y2 according the to the rules
+// of checkers. If a piece jumps another piece, that piece is
+// removed from the game. If the move lands the piece on the
+// enemy's back row, that piece is promoted.
+//
+// This makes no attempt to validate the move for other rules,
+// it's assumed that the move is validated with is_move_valid
+// first.
+//
+// Returns the number of -1 on error, 0 on success, 1 if
+// piece captured
+int move_piece(int x1, int y1, int x2, int y2) {
+  // Bounds checking
   if(!is_location_valid(x1,y1) || !is_location_valid(x2,y2))
-    return false;
+    return -1;
 
   int p = get_piece(x1,y1);
-  if(p == ' ')
-    return false;
-  if(get_piece(x2,y2) != ' ')
-    return false;
 
+  // Promote
+  if(p == 'b' && y2 == 0)
+    p = 'B';
+  else if(p == 'w' && y2 == BOARD_HEIGHT-1)
+    p = 'W';
+
+  // Move and capture
+  set_piece(x2,y2,p);
   set_piece(x1,y1,' ');
-  return set_piece(x2,y2,p);
+  if(abs(x2-x1) == 2) {
+    set_piece(x1+sign(x2-x1), y1+sign(y2-y1), ' ');
+    return 1;
+  }
+
+  return 0;
 }
 
 

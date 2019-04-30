@@ -11,7 +11,7 @@ const char *is_move_valid(int x1, int y1, int x2, int y2, char p);
 
 int get_piece(int x, int y);
 bool set_piece(int x, int y, char piece);
-bool move_piece(int x1, int y1, int x2, int y2);
+int move_piece(int x1, int y1, int x2, int y2);
 void init_board();
 
 #endif

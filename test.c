@@ -104,22 +104,25 @@ test(move_piece_moves_piece) {
 
 test(move_piece_removes_piece) {
   clear_board();
-  board[3][3] = '!';
+  board[3][3] = 'w';
   move_piece(3,3, 1,1);
   munit_assert_char(board[3][3],==,' ');
   return MUNIT_OK;
 }
 
-test(move_piece_dest_not_empty) {
+test(move_piece_promotes_black) {
   clear_board();
-  board[3][3] = board[1][1] = '!';
-  munit_assert_false(move_piece(3,3, 1,1));
+  board[1][0] = 'b';
+  move_piece(0,1, 1,0);
+  munit_assert_char(board[0][1],==,'B');
   return MUNIT_OK;
 }
 
-test(move_piece_src_empty) {
+test(move_piece_promotes_white) {
   clear_board();
-  munit_assert_false(move_piece(3,3, 1,1));
+  board[BOARD_HEIGHT-2][1] = 'w';
+  move_piece(1,BOARD_HEIGHT-2, 0,BOARD_HEIGHT-1);
+  munit_assert_char(board[BOARD_HEIGHT-1][0],==,'W');
   return MUNIT_OK;
 }
 
