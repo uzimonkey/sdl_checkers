@@ -7,8 +7,10 @@
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+#define TILE_WIDTH 32
+#define TILE_HEIGHT 32
 
-#define die(msg) do { perror(msg); exit(EXIT_FAILURE); } while(0);
+#define die(msg) do { perror(msg); exit(EXIT_FAILURE); } while(0)
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -75,11 +77,64 @@ void load_texture(const char* filename, Texture *tex) {
 
 void load_resources() {
   load_texture("assets/board.png", &tex_board);
+  load_texture("assets/white.png", &tex_white);
+  load_texture("assets/white_king.png", &tex_white_king);
+  load_texture("assets/black.png", &tex_black);
+  load_texture("assets/black_king.png", &tex_black_king);
+}
+
+void draw_board() {
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+  // Draw board
+  SDL_RenderCopy(
+      renderer,
+      tex_board.tex,
+      NULL,
+      &(SDL_Rect){
+        .x=(WINDOW_WIDTH-tex_board.w)/2,
+        .y=(WINDOW_HEIGHT-tex_board.h)/2,
+        .w=tex_board.w,
+        .h=tex_board.h
+      }
+  );
+
+  // Top left of the board
+  int board_x = (WINDOW_WIDTH-tex_board.w)/2 + TILE_WIDTH;
+  int board_y = (WINDOW_HEIGHT-tex_board.h)/2 + TILE_HEIGHT;
+
+  for(int y = 0; y < BOARD_HEIGHT; y++) {
+    for(int x = 0; x < BOARD_WIDTH; x++) {
+      Texture *tex = NULL;
+      switch(get_piece(x,y)) {
+        case 'w': tex = &tex_white; break;
+        case 'W': tex = &tex_white_king; break;
+        case 'b': tex = &tex_black; break;
+        case 'B': tex = &tex_black_king; break;
+      }
+
+      if(tex == NULL)
+        continue;
+
+      SDL_RenderCopy(
+          renderer,
+          tex->tex,
+          NULL,
+          &(SDL_Rect){
+            .x=board_x + x*TILE_WIDTH,
+            .y=board_y + y*TILE_WIDTH,
+            .w=tex->w,
+            .h=tex->h
+          }
+      );
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
   init_sdl();
   load_resources();
+  init_board();
 
   while(1) {
     for(SDL_Event e; SDL_PollEvent(&e);) {
@@ -88,14 +143,7 @@ int main(int argc, char *argv[]) {
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderCopy(
-        renderer,
-        tex_board.tex,
-        NULL,
-        &(SDL_Rect){.x=0, .y=0, .w=tex_board.w, .h=tex_board.h}
-    );
+    draw_board();
     SDL_RenderPresent(renderer);
   }
 done:
