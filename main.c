@@ -49,14 +49,20 @@ void init_sdl() {
   if(SDL_Init(SDL_INIT_EVERYTHING))
     die(SDL_GetError());
 
-  if(SDL_CreateWindowAndRenderer(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        0,
-        &window,
-        &renderer)) {
+  window = SDL_CreateWindow(
+      "Checkers",
+      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      WINDOW_WIDTH, WINDOW_HEIGHT,
+      0);
+  if(!window)
     die(SDL_GetError());
-  }
+
+  renderer = SDL_CreateRenderer(
+      window,
+      -1,
+      SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  if(!renderer)
+    die(SDL_GetError());
 }
 
 
