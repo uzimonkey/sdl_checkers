@@ -11,6 +11,9 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 
+#define TARGET_WIDTH ((TILE_WIDTH) * (BOARD_WIDTH+2))
+#define TARGET_HEIGHT ((TILE_HEIGHT) * (BOARD_WIDTH+2))
+
 #define FONT_CHARS ( \
     "!\"#$%&'()*+,-./0123456789:;<=>?@" \
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`" \
@@ -23,10 +26,16 @@
 #endif
 
 #define die(msg) do { perror(msg); exit(EXIT_FAILURE); } while(0)
+#define max(a,b) ((a) > (b) ? (a) : (b))
+#define min(a,b) ((a) < (b) ? (a) : (b))
 
+// SDL stuff
 SDL_Window *window;
 SDL_Renderer *renderer;
+SDL_Texture *render_target;
+int render_target_scale;
 
+// Resources
 typedef struct {
   SDL_Texture *tex;
   int w, h;
@@ -45,7 +54,34 @@ typedef struct {
 Font font;
 
 
-void init_sdl() {
+// SDL functions
+void update_render_target(void) {
+  if(render_target != NULL)
+    SDL_DestroyTexture(render_target);
+  
+  int win_width, win_height;
+  SDL_GetWindowSize(window, &win_width, &win_height);
+
+  render_target_scale = ceil(min(
+        win_width / (double)TARGET_WIDTH,
+        win_height / (double)TARGET_HEIGHT));
+  if(render_target_scale < 1)
+    render_target_scale = 1;
+
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+  render_target = SDL_CreateTexture(
+      renderer, 
+      SDL_PIXELFORMAT_RGBA8888,
+      SDL_TEXTUREACCESS_TARGET,
+      TARGET_WIDTH * render_target_scale,
+      TARGET_HEIGHT * render_target_scale);
+
+  if(render_target == NULL)
+    die(SDL_GetError());
+}
+
+
+void init_sdl(void) {
   if(SDL_Init(SDL_INIT_EVERYTHING))
     die(SDL_GetError());
 
@@ -53,7 +89,7 @@ void init_sdl() {
       "Checkers",
       SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
       WINDOW_WIDTH, WINDOW_HEIGHT,
-      0);
+      SDL_WINDOW_RESIZABLE);
   if(!window)
     die(SDL_GetError());
 
@@ -63,6 +99,8 @@ void init_sdl() {
       SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!renderer)
     die(SDL_GetError());
+
+  update_render_target();
 }
 
 
@@ -82,6 +120,7 @@ SDL_Surface *load_png(const char *filename) {
 
 
 void load_texture_from_surface(SDL_Surface *surf, Texture *tex) {
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
   tex->tex = SDL_CreateTextureFromSurface(renderer, surf);
   if(tex->tex == NULL)
     die(SDL_GetError());
@@ -124,7 +163,7 @@ void load_font(const char *filename, const char *charset, Font *fnt) {
 }
 
 
-void load_resources() {
+void load_resources(void) {
   load_texture("assets/board.png", &tex_board);
   load_texture("assets/white.png", &tex_white);
   load_texture("assets/white_king.png", &tex_white_king);
@@ -167,7 +206,6 @@ void draw_string(Font *fnt, int x, int y, const char *fmt, ...) {
     }
 
     int idx = (int)(p - fnt->charset);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderCopy(
         renderer,
         fnt->tex.tex,
@@ -185,25 +223,14 @@ void draw_string(Font *fnt, int x, int y, const char *fmt, ...) {
 }
 
 
-void draw_board() {
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
+// Checkers functions
+void draw_board(void) {
   // Draw board
   SDL_RenderCopy(
       renderer,
       tex_board.tex,
       NULL,
-      &(SDL_Rect){
-        .x=(WINDOW_WIDTH-tex_board.w)/2,
-        .y=(WINDOW_HEIGHT-tex_board.h)/2,
-        .w=tex_board.w,
-        .h=tex_board.h
-      }
-  );
-
-  // Top left of the board
-  int board_x = (WINDOW_WIDTH-tex_board.w)/2 + TILE_WIDTH;
-  int board_y = (WINDOW_HEIGHT-tex_board.h)/2 + TILE_HEIGHT;
+      NULL);
 
   for(int y = 0; y < BOARD_HEIGHT; y++) {
     for(int x = 0; x < BOARD_WIDTH; x++) {
@@ -223,15 +250,16 @@ void draw_board() {
           tex->tex,
           NULL,
           &(SDL_Rect){
-            .x=board_x + x*TILE_WIDTH,
-            .y=board_y + y*TILE_WIDTH,
-            .w=tex->w,
-            .h=tex->h
+            .x=((x+1) * TILE_WIDTH) * render_target_scale,
+            .y=((y+1) * TILE_HEIGHT) * render_target_scale,
+            .w=tex->w * render_target_scale,
+            .h=tex->h * render_target_scale
           }
       );
     }
   }
 }
+
 
 int main(int argc, char *argv[]) {
   init_sdl();
@@ -240,13 +268,53 @@ int main(int argc, char *argv[]) {
 
   while(1) {
     for(SDL_Event e; SDL_PollEvent(&e);) {
-      if(e.type == SDL_QUIT) goto done;
+      switch(e.type) {
+      case SDL_QUIT:
+        goto done;
+
+      case SDL_WINDOWEVENT:
+        if(e.window.windowID != SDL_GetWindowID(window))
+          break;
+        switch(e.window.event) {
+        case SDL_WINDOWEVENT_CLOSE:
+          goto done;
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+          update_render_target();
+          break;
+        }
+        break;
+      }
     }
 
+    SDL_SetRenderTarget(renderer, render_target);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     draw_board();
     draw_string(&font, 0, 0, "Hello, world!");
+
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    int window_width, window_height;
+    SDL_GetWindowSize(window, &window_width, &window_height);
+
+    double scale = min(
+        (double)window_width/(TARGET_WIDTH * render_target_scale),
+        (double)window_height/(TARGET_HEIGHT * render_target_scale));
+
+    SDL_RenderCopy(
+      renderer,
+      render_target,
+      NULL,
+      &(SDL_Rect){
+        .x=(window_width - TARGET_WIDTH*render_target_scale*scale)/2,
+        .y=(window_height - TARGET_HEIGHT*render_target_scale*scale)/2,
+        .w=TARGET_WIDTH*render_target_scale*scale,
+        .h=TARGET_HEIGHT*render_target_scale*scale
+      });
     SDL_RenderPresent(renderer);
   }
 done:

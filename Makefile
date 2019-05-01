@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -std=c11 -pedantic `pkg-config --cflags sdl2`
-LDFLAGS = `pkg-config --libs sdl2`
+LDFLAGS = `pkg-config --libs sdl2` -lm
 
 sdl_checkers: checkers.c checkers.h main.c
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
