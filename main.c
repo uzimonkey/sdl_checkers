@@ -16,6 +16,12 @@
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`" \
     "abcdefghijklmnopqrstuvwxyz{|}~" )
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define RGBA_MASK 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+#define RGBA_MASK 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+
 #define die(msg) do { perror(msg); exit(EXIT_FAILURE); } while(0)
 
 SDL_Window *window;
@@ -60,17 +66,7 @@ SDL_Surface *load_png(const char *filename) {
     die(cp_error_reason);
 
   SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(
-      img.pix,
-      img.w,
-      img.h,
-      32,
-      img.w*4,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-      0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
-#else
-      0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-#endif
-  );
+      img.pix, img.w, img.h, 32, img.w*4, RGBA_MASK);
   
   if(surf == NULL)
     die(SDL_GetError());
@@ -149,6 +145,14 @@ void draw_string(Font *fnt, int x, int y, const char *fmt, ...) {
   }
 
   for(char *c = buf; *c; c++) {
+    // Spaces are 1 n wide
+    if(*c == ' ') {
+      char *p = index(fnt->charset, 'n');
+      int idx = (int)(p - fnt->charset);
+      x += fnt->src_rects[idx].w;
+      continue;
+    }
+
     char *p = index(fnt->charset, *c);
     if(p == NULL) {
       *c = '?';
@@ -156,7 +160,7 @@ void draw_string(Font *fnt, int x, int y, const char *fmt, ...) {
       continue;
     }
 
-    int idx = (int)(p-fnt->charset);
+    int idx = (int)(p - fnt->charset);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderCopy(
         renderer,
